@@ -37,6 +37,44 @@ namespace ZaohuaModManager
 
         public bool CapturingKey => Visible && settings.CapturingKey;
 
+        const int TipWindowId = WindowId + 1;
+
+        /// <summary>待弹出的「需重启」提示，null = 不弹。</summary>
+        string restartTip;
+
+        bool tipDontShow;
+
+        public ManagerWindow()
+        {
+            settings.OnRestartNeeded = ShowRestartTip;
+        }
+
+        void ShowRestartTip(string what)
+        {
+            if (!Plugin.ShowRestartTip.Value)
+            {
+                return;
+            }
+            restartTip = what;
+            tipDontShow = false;
+        }
+
+        void DrawRestartTip(int id)
+        {
+            GUILayout.Label($"{restartTip}\n改完后要重启游戏才会生效。", wrap);
+            GUILayout.FlexibleSpace();
+            tipDontShow = GUILayout.Toggle(tipDontShow, "不再提示");
+            GUILayout.Label("以后想恢复：插件设置 → MOD 管理器 → ShowRestartTip", small);
+            if (GUILayout.Button("知道了", GUILayout.Height(30)))
+            {
+                if (tipDontShow)
+                {
+                    Plugin.ShowRestartTip.Value = false;
+                }
+                restartTip = null;
+            }
+        }
+
         public bool Contains(Vector2 guiPos) => Visible && rect.Contains(guiPos);
 
         public void Show()
@@ -65,6 +103,7 @@ namespace ZaohuaModManager
         public void Hide()
         {
             Visible = false;
+            restartTip = null;
             try
             {
                 OfficialMods.ApplyIfDirty();
@@ -105,6 +144,12 @@ namespace ZaohuaModManager
                 small.richText = wrap.richText = true;
             }
             rect = GUI.Window(WindowId, rect, Draw, "MOD 管理");
+            if (restartTip != null)
+            {
+                const float w = 420, h = 170;
+                var tipRect = new Rect(rect.x + (rect.width - w) / 2, rect.y + (rect.height - h) / 2, w, h);
+                GUI.ModalWindow(TipWindowId, tipRect, DrawRestartTip, "需要重启游戏");
+            }
         }
 
         void Draw(int id)
@@ -246,6 +291,10 @@ namespace ZaohuaModManager
                     try
                     {
                         PluginList.SetEnabled(p, on);
+                        if (p.Loaded != p.WillLoad)
+                        {
+                            ShowRestartTip($"{(on ? "启用" : "停用")}插件「{p.Name}」");
+                        }
                     }
                     catch (Exception e)
                     {

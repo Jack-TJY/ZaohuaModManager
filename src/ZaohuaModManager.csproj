@@ -3,7 +3,7 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>ZaohuaModManager</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <!-- 游戏和 BepInEx 的 dll 不随仓库分发，见 README -->
     <GameManaged Condition="'$(GameManaged)' == ''">..\lib</GameManaged>
   </PropertyGroup>
@@ -19,6 +19,7 @@
     <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(GameManaged)\UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.UI"><HintPath>$(GameManaged)\UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="BepInEx"><HintPath>$(GameManaged)\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Mono.Cecil"><HintPath>$(GameManaged)\Mono.Cecil.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="0Harmony"><HintPath>$(GameManaged)\0Harmony.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 </Project>

@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace ZaohuaModManager
 {
-    // 主菜单加一个「MOD 管理」按钮（快捷键 F10），打开游戏自带但没有入口的创意工坊面板「我的 mod」页。
-    [BepInPlugin("zaohua.modmanager", "MOD 管理器", "0.1.0")]
+    // 游戏内管理 MOD：主菜单「MOD 管理」按钮 / F10 打开窗口，管官方数据 mod（启用、顺序、冲突）和 BepInEx 插件（启用/停用）。
+    [BepInPlugin("zaohua.modmanager", "MOD 管理器", "0.2.0")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;

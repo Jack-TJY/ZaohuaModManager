@@ -33,28 +33,5 @@ namespace ZaohuaModManager.Game
         {
             MonoSingleton<UIMgr>.Instance.HidePanel<WorkShopPanel>();
         }
-
-        public static string Toggle()
-        {
-            try
-            {
-                if (IsOpen)
-                {
-                    Close();
-                    return null;
-                }
-                if (!AtMainMenu)
-                {
-                    return "请回到主菜单再管理 MOD（存档中途换配置表可能坏档）";
-                }
-                Open();
-                return IsOpen ? null : "打开 MOD 面板失败，详见 BepInEx\\LogOutput.log";
-            }
-            catch (Exception e)
-            {
-                Plugin.Log.LogError(e);
-                return "打开 MOD 面板失败：" + e.Message;
-            }
-        }
     }
 }

@@ -29,7 +29,7 @@ namespace ZaohuaModManager
 
         public void Update()
         {
-            if (Plugin.OpenKey.Value.IsDown())
+            if (Plugin.OpenKey.Value.IsDown() && !window.CapturingKey)
             {
                 Toggle();
             }

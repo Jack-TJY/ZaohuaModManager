@@ -60,7 +60,7 @@ namespace ZaohuaModManager
             {
                 Refresh();
             }
-            GUILayout.Label("改动立即保存到 BepInEx\\config 里的 cfg 文件。有的设置马上生效，有的要重启游戏（看插件自己的说明）。停用的插件不显示。", small);
+            GUILayout.Label("改动立即保存到 BepInEx\\config 里的 cfg 文件。标了「需重启游戏」的要重启才生效（本项目的插件已逐个核实；其他作者的插件以它自己的说明为准）。停用的插件不显示。", small);
             GUILayout.BeginHorizontal();
             listScroll = GUILayout.BeginScrollView(listScroll, GUILayout.Width(200));
             foreach (var p in plugins)
@@ -83,14 +83,35 @@ namespace ZaohuaModManager
             }
             else
             {
-                DrawConfig(ConfigOf(info));
+                DrawConfig(info);
             }
             GUILayout.EndScrollView();
             GUILayout.EndHorizontal();
         }
 
-        void DrawConfig(ConfigFile cfg)
+        PluginInfo current;
+
+        /// <summary>改完要重启的设置被修改时调用，参数是给玩家看的设置名。</summary>
+        public Action<string> OnRestartNeeded;
+
+        /// <summary>所有修改都走这里：值变了且该设置要重启才生效时弹提示。</summary>
+        void Set(ConfigEntryBase e, object value)
         {
+            if (Equals(e.BoxedValue, value))
+            {
+                return;
+            }
+            e.BoxedValue = value;
+            if (RestartInfo.NeedsRestart(current, e))
+            {
+                OnRestartNeeded?.Invoke($"{current.Metadata.Name} 的「{e.Definition.Key}」");
+            }
+        }
+
+        void DrawConfig(PluginInfo info)
+        {
+            current = info;
+            var cfg = ConfigOf(info);
             var entries = cfg.Select(kv => kv.Value).Where(e => e != null)
                 .OrderBy(e => e.Definition.Section, StringComparer.CurrentCulture)
                 .ToList();
@@ -105,7 +126,7 @@ namespace ZaohuaModManager
                 }
                 GUILayout.BeginVertical(GUI.skin.box);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(e.Definition.Key, rich, GUILayout.Width(160));
+                GUILayout.Label(e.Definition.Key + (RestartInfo.NeedsRestart(info, e) ? "\n<size=12><color=#e0a040>需重启游戏</color></size>" : ""), rich, GUILayout.Width(160));
                 try
                 {
                     DrawEditor(e);
@@ -118,7 +139,7 @@ namespace ZaohuaModManager
                 GUI.enabled = !isDefault;
                 if (GUILayout.Button("默认", GUILayout.Width(50)))
                 {
-                    e.BoxedValue = e.DefaultValue;
+                    Set(e, e.DefaultValue);
                     drafts.Remove(e);
                     errors.Remove(e);
                 }
@@ -143,7 +164,7 @@ namespace ZaohuaModManager
                 bool nv = GUILayout.Toggle(v, v ? "开" : "关");
                 if (nv != v)
                 {
-                    e.BoxedValue = nv;
+                    Set(e, nv);
                 }
             }
             else if (type.IsEnum)
@@ -174,7 +195,7 @@ namespace ZaohuaModManager
             int next = GUILayout.SelectionGrid(cur, names, Math.Min(names.Length, 3));
             if (next != cur && next >= 0)
             {
-                e.BoxedValue = values[next];
+                Set(e, values[next]);
             }
         }
 
@@ -193,7 +214,7 @@ namespace ZaohuaModManager
                         if (ev.control) mods.Add(KeyCode.LeftControl);
                         if (ev.shift) mods.Add(KeyCode.LeftShift);
                         if (ev.alt) mods.Add(KeyCode.LeftAlt);
-                        e.BoxedValue = new KeyboardShortcut(ev.keyCode, mods.ToArray());
+                        Set(e, new KeyboardShortcut(ev.keyCode, mods.ToArray()));
                     }
                     if (!IsModifier(ev.keyCode))
                     {
@@ -248,7 +269,7 @@ namespace ZaohuaModManager
                     {
                         v = range.Clamp(v);
                     }
-                    e.BoxedValue = v;
+                    Set(e, v);
                     drafts.Remove(e);
                     errors.Remove(e);
                 }

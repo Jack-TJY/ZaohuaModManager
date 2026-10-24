@@ -1,0 +1,53 @@
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+using HarmonyLib;
+using UnityEngine;
+
+namespace ZaohuaModManager
+{
+    // 主菜单加一个「MOD 管理」按钮（快捷键 F10），打开游戏自带但没有入口的创意工坊面板「我的 mod」页。
+    [BepInPlugin("zaohua.modmanager", "MOD 管理器", "0.1.0")]
+    public class Plugin : BaseUnityPlugin
+    {
+        internal static ManualLogSource Log;
+
+        internal static ConfigEntry<KeyboardShortcut> OpenKey;
+
+        internal static ConfigEntry<bool> ShowButton;
+
+        internal static ConfigEntry<int> ButtonX, ButtonY;
+
+        private void Awake()
+        {
+            Log = Logger;
+            // F5/F8 是游戏的快速存读档，F9 是自动炼丹炼器
+            OpenKey = Config.Bind("通用", "OpenKey", new KeyboardShortcut(KeyCode.F10), "打开/关闭 MOD 管理（不要设成 F5/F8/F9）");
+            ShowButton = Config.Bind("通用", "ShowButton", true, "主菜单是否显示「MOD 管理」按钮；false 时只能用快捷键");
+            ButtonX = Config.Bind("通用", "ButtonX", -1, "主菜单按钮的位置（像素，左上角为原点）；在游戏里按住按钮拖动会自动改这里，-1 = 默认位置");
+            ButtonY = Config.Bind("通用", "ButtonY", -1, "同上，纵坐标");
+            new Harmony("zaohua.modmanager").PatchAll();
+            // BepInEx 自带的管理物体在这个游戏里会被销毁，导致插件的 Update/OnGUI 不跑，所以自己建一个常驻物体
+            var go = new GameObject("ZaohuaModManager");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            DontDestroyOnLoad(go);
+            go.AddComponent<Runner>();
+            Log.LogInfo("MOD 管理器已加载，主菜单左下角有「MOD 管理」按钮，快捷键 " + OpenKey.Value);
+        }
+    }
+
+    internal class Runner : MonoBehaviour
+    {
+        private readonly MainMenuButton button = new MainMenuButton();
+
+        private void Update()
+        {
+            button.Update();
+        }
+
+        private void OnGUI()
+        {
+            button.OnGUI();
+        }
+    }
+}

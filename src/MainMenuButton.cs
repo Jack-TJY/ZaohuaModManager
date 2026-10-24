@@ -7,11 +7,13 @@ using UnityEngine.UI;
 
 namespace ZaohuaModManager
 {
-    /// <summary>主菜单左下角的「MOD 管理」按钮，以及快捷键。按住按钮可以拖动位置。</summary>
+    /// <summary>主菜单左下角的「MOD 管理」按钮，以及快捷键（任何时候都能打开窗口）。按住按钮可以拖动位置。</summary>
     internal class MainMenuButton
     {
-        /// <summary>鼠标在按钮上：挡住游戏 UI 的射线，避免点穿到主菜单（见 GraphicRaycasterPatch）。</summary>
+        /// <summary>鼠标在按钮或窗口上：挡住游戏 UI 的射线，避免点穿（见 GraphicRaycasterPatch）。</summary>
         internal static bool MouseOver;
+
+        readonly ManagerWindow window = new ManagerWindow();
 
         Font font;
 
@@ -23,7 +25,7 @@ namespace ZaohuaModManager
 
         Vector2 pressMouse, pressPos, dragPos;
 
-        bool ButtonVisible => Plugin.ShowButton.Value && Game.OfficialPanel.AtMainMenu && !Game.OfficialPanel.IsOpen;
+        bool ButtonVisible => Plugin.ShowButton.Value && Game.OfficialPanel.AtMainMenu && !Game.OfficialPanel.IsOpen && !window.Visible;
 
         public void Update()
         {
@@ -42,15 +44,31 @@ namespace ZaohuaModManager
             {
                 visible = false;
             }
-            MouseOver = visible && (pressing || ButtonRect().Contains(gui));
+            MouseOver = (visible && (pressing || ButtonRect().Contains(gui))) || window.Contains(gui);
         }
 
         void Toggle()
         {
-            string err = Game.OfficialPanel.Toggle();
-            if (err != null)
+            try
             {
-                toast = err;
+                if (window.Visible)
+                {
+                    window.Hide();
+                }
+                else if (Game.OfficialPanel.IsOpen)
+                {
+                    // 游戏自带面板开着时，快捷键先把它关掉
+                    Game.OfficialPanel.Close();
+                }
+                else
+                {
+                    window.Show();
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
+                toast = "打开 MOD 管理失败：" + e.Message;
                 toastUntil = Time.unscaledTime + 4f;
             }
         }
@@ -67,7 +85,7 @@ namespace ZaohuaModManager
                 // 游戏刚启动时 UIMgr 还没建好
                 return;
             }
-            if (!visible && toast == null)
+            if (!visible && toast == null && !window.Visible)
             {
                 return;
             }
@@ -83,6 +101,7 @@ namespace ZaohuaModManager
                 {
                     DrawButton();
                 }
+                window.OnGUI();
                 DrawToast();
             }
             finally

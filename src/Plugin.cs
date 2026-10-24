@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace ZaohuaModManager
 {
-    // 游戏内管理 MOD：主菜单「MOD 管理」按钮 / F10 打开窗口，管官方数据 mod（启用、顺序、冲突）和 BepInEx 插件（启用/停用）。
-    [BepInPlugin("zaohua.modmanager", "MOD 管理器", "0.2.0")]
+    // 游戏内管理 MOD：主菜单「MOD 管理」按钮 / F10 打开窗口，管官方数据 mod（启用、顺序、冲突）和 BepInEx 插件（启用/停用、改设置）。
+    [BepInPlugin("zaohua.modmanager", "MOD 管理器", "0.3.0")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;

@@ -8,12 +8,12 @@ using ZaohuaModManager.Game;
 
 namespace ZaohuaModManager
 {
-    /// <summary>MOD 管理窗口：官方 mod / 插件 / 冲突检查 三页。</summary>
+    /// <summary>MOD 管理窗口：官方 mod / 插件 / 插件设置 / 冲突检查 四页。</summary>
     internal class ManagerWindow
     {
         const int WindowId = 0x5A4D4D;
 
-        static readonly string[] Tabs = { "官方 MOD", "BepInEx 插件", "冲突检查" };
+        static readonly string[] Tabs = { "官方 MOD", "BepInEx 插件", "插件设置", "冲突检查" };
 
         public bool Visible { get; private set; }
 
@@ -32,6 +32,10 @@ namespace ZaohuaModManager
         string selectedMod;
 
         GUIStyle small, wrap, header, rich;
+
+        readonly SettingsPage settings = new SettingsPage();
+
+        public bool CapturingKey => Visible && settings.CapturingKey;
 
         public bool Contains(Vector2 guiPos) => Visible && rect.Contains(guiPos);
 
@@ -55,6 +59,7 @@ namespace ZaohuaModManager
                 Plugin.Log.LogError(e);
             }
             RefreshPlugins();
+            settings.Refresh();
         }
 
         public void Hide()
@@ -128,6 +133,9 @@ namespace ZaohuaModManager
                         DrawPlugins();
                         break;
                     case 2:
+                        settings.Draw(small, rich);
+                        break;
+                    case 3:
                         DrawConflicts();
                         break;
                 }

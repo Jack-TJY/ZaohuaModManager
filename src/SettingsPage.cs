@@ -31,10 +31,16 @@ namespace ZaohuaModManager
 
         GUIStyle small, rich;
 
+        /// <summary>
+        /// 这个游戏会销毁 BepInEx 的管理物体，插件的 MonoBehaviour 实例随之被 Unity 判为 null（p.Instance != null 为 false），
+        /// 但 C# 对象和它的 Config 仍然在用，所以这里绕过 Unity 的 null 判断。
+        /// </summary>
+        static ConfigFile ConfigOf(PluginInfo p) => ReferenceEquals(p.Instance, null) ? null : p.Instance.Config;
+
         public void Refresh()
         {
             plugins = Chainloader.PluginInfos.Values
-                .Where(p => p.Instance != null && p.Instance.Config != null && p.Instance.Config.Count > 0)
+                .Where(p => ConfigOf(p) != null && ConfigOf(p).Count > 0)
                 .OrderBy(p => p.Metadata.Name, StringComparer.CurrentCulture)
                 .ToList();
             if (selected == null || plugins.All(p => p.Metadata.GUID != selected))
@@ -77,7 +83,7 @@ namespace ZaohuaModManager
             }
             else
             {
-                DrawConfig(info.Instance.Config);
+                DrawConfig(ConfigOf(info));
             }
             GUILayout.EndScrollView();
             GUILayout.EndHorizontal();
